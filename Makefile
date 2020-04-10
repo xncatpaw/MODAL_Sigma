@@ -44,6 +44,7 @@ all : $(LINK_TARGET)
 
 clean: 
 	rm -f $(REBUILDABLES)
+	rm -f log.txt
 
 # There is no required order to the list of rules as they appear in the Makefile.
 # Make will build its own dependency tree and only execute each rule only once

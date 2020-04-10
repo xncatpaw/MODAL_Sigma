@@ -51,6 +51,33 @@ int main(int argc, char *argv[])
     if(argc >= 5)
         PRINT = 1;
 
+    
+    int sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if(sock_fd < 0)
+    {
+        perror("Err creating raw socket.\n");
+        return -1;
+    }
+    else
+    {
+        printf("Raw socket created.\n");
+    }
+    
+    // 1 = on, 0 = off.
+    int hincl = 1;  
+    setsockopt(sock_fd, IPPROTO_IP, IP_HDRINCL, &hincl, sizeof(hincl));
+	if(sock_fd < 0)
+	{
+        perror("Error configuring raw socket. ");
+
+        close(sock_fd);
+        return -1;
+	}
+	else
+	{
+		printf("Raw socket configured.\n");
+	}
+
     for(int i=0; i<NUM_REPEAT; ++i)
     {
         gen_ip(src_ip);
@@ -62,7 +89,7 @@ int main(int argc, char *argv[])
         printf("%5d : %5d, src %s:%4d\n", i, NUM_REPEAT, src_ip, src_prt);
         //printf("%5d : %5d, dst %s:%4d\n", i, NUM_REPEAT, dst_ip, dst_prt);
 
-        rslt = send_raw_tcp(msg, msg_len, src_ip, src_prt, dst_ip, dst_prt, PRINT);
+        rslt = send_raw_tcp(sock_fd, msg, msg_len, src_ip, src_prt, dst_ip, dst_prt, PRINT);
         if(rslt < 0)
         {
             perror("send err ");

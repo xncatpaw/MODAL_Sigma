@@ -228,6 +228,7 @@ void gen_tcp_packet(uint8_t * pkt_buf, uint16_t * p_pkt_len, uint16_t _pkt_buf_l
  * Name : send_raw_udp
  * Param(s) : 
  *  # IN :
+ *  _sock_fd,   int,        the socket number.
  *  _msg_buf,   uint8_t *,  the buffer to message.
  *  _msg_len,   uint16_t,   length of msg.
  *  _src_ip,    char *,     a string of the source ip addr.
@@ -238,12 +239,14 @@ void gen_tcp_packet(uint8_t * pkt_buf, uint16_t * p_pkt_len, uint16_t _pkt_buf_l
  * Return :
  *  result,     int,        0 if success. -1 if not.
 */
-int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
+int send_raw_udp(int _sock_fd,
+                uint8_t * _msg_buf, uint16_t _msg_len,
                 char * _src_ip, uint16_t _src_prt,
                 char * _dst_ip, uint16_t _dst_prt,
                 int PRINT)
 {
     // Get the socket number.
+    /*
     int sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if(sock_fd < 0)
     {
@@ -264,13 +267,15 @@ int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
 	{
         if(PRINT)
 		    perror("Error configuring raw socket. ");
-        close(sock_fd);
+        //close(sock_fd);
         return -1;
 	}
 	else
 	{
 		//printf("Raw socket configured.\n");
 	}
+    */
+   int sock_fd = _sock_fd;
 
     // The destination
     struct sockaddr_in dest;
@@ -303,7 +308,7 @@ int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
     {
         if(PRINT)
             perror("Error sending raw socket. \n");
-        close(sock_fd);
+        //close(sock_fd);
         return -1;
     }
     else
@@ -322,7 +327,7 @@ int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
             free(packet_cpy);
         }
 
-        close(sock_fd);
+        //close(sock_fd);
         return 0;
     }
     
@@ -333,6 +338,7 @@ int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
  * Name : send_raw_tcp
  * Param(s) : 
  *  # IN :
+ *  _sock_fd,   int,        the socket number.
  *  _msg_buf,   uint8_t *,  the buffer to message.
  *  _msg_len,   uint16_t,   length of msg.
  *  _src_ip,    char *,     a string of the source ip addr.
@@ -343,11 +349,13 @@ int send_raw_udp(uint8_t * _msg_buf, uint16_t _msg_len,
  * Return :
  *  result,     int,        0 if success. -1 if not.
 */
-int send_raw_tcp(uint8_t * _msg_buf, uint16_t _msg_len,
+int send_raw_tcp(int _sock_fd,
+                uint8_t * _msg_buf, uint16_t _msg_len,
                 char * _src_ip, uint16_t _src_prt,
                 char * _dst_ip, uint16_t _dst_prt,
                 int PRINT)
 {
+    /*
     // Get the socket number.
     int sock_fd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if(sock_fd < 0)
@@ -370,13 +378,15 @@ int send_raw_tcp(uint8_t * _msg_buf, uint16_t _msg_len,
         if(PRINT)
 		    perror("Error configuring raw socket. ");
 
-        close(sock_fd);
+        //close(sock_fd);
         return -1;
 	}
 	else
 	{
 		//printf("Raw socket configured.\n");
 	}
+    */
+    int sock_fd = _sock_fd;
 
     // The destination
     struct sockaddr_in dest;
@@ -409,7 +419,7 @@ int send_raw_tcp(uint8_t * _msg_buf, uint16_t _msg_len,
     {
         if(PRINT)
             perror("Error sending raw socket. \n");
-        close(sock_fd);
+        //close(sock_fd);
         return -1;
     }
     else
@@ -428,7 +438,7 @@ int send_raw_tcp(uint8_t * _msg_buf, uint16_t _msg_len,
             free(packet_cpy);
         }
 
-        close(sock_fd);
+        //close(sock_fd);
         return 0;
     }
     
