@@ -5,10 +5,16 @@
 */
 #include<stdio.h>
 #include<string.h>
+#include<stdlib.h>
 #include<sys/socket.h>
 #include<stdlib.h>
 #include<netinet/in.h>
 #include<arpa/inet.h>
+#include<linux/if_packet.h>
+#include<sys/ioctl.h>
+#include<sys/socket.h>
+#include<net/if.h>
+#include<netinet/ether.h>
 
 #include "header.h"
 #include "raw_ip.h"
@@ -192,7 +198,7 @@ void gen_tcp_packet(uint8_t * pkt_buf, uint16_t * p_pkt_len, uint16_t _pkt_buf_l
     p_iphdr->check = checksum(p_iphdr, iphdr_len);
 
 
-    // Fill the UDP header.
+    // Fill the TCP header.
     p_tcphdr->source = htons(_src_prt);
     p_tcphdr->dest = dest.sin_port;
     p_tcphdr->seq = htonl(0);
@@ -221,6 +227,78 @@ void gen_tcp_packet(uint8_t * pkt_buf, uint16_t * p_pkt_len, uint16_t _pkt_buf_l
     // Return .
     *p_pkt_len = tot_len;
     return;
+}
+
+
+/**
+ * Name : gen_eth_packet
+ *  Function used to generate the raw eth-ip-tcp/udp packet.
+ * Param(s) :   
+ *  # Out :
+ *  pkt_buf,    uint8_t *,  the buffer to the packet to be generated.
+ *  p_pkt_len,  uint16_t *, the pointer to the length of packet generated.
+ *  # IN : 
+ *  _pkt_buf_len uint16_t,  the size of buffer pkt_buf.
+ *  _ip_proto,  int,        the protocol used in ip-header. Shall be 6(TCP) or 17(UDP).
+ *  _src_buf,   uint8_t *,  the source eth addr.
+ *  _dst_buf,   uint8_t *,  the destination eth addr.
+ *  _msg_buf,   uint8_t *,  the buffer to message.
+ *  _msg_len,   uint16_t,   length of msg.
+ *  _src_ip,    char *,     a string of the source ip addr.
+ *  _src_prt,   uint16_t,   the source port num.
+ *  _dst_ip,    char *,     a string of the dest ip addr.
+ *  _dst_prt,   uint16_t,   the dest port num.
+ * Return :
+ *  None
+*/
+void gen_eth_packet(uint8_t * pkt_buf, uint16_t * p_pkt_len, uint16_t _pkt_buf_len,
+                int _ip_proto,
+                uint8_t * _src_eth, uint8_t * _dst_eth,
+                uint8_t * _msg_buf, uint16_t _msg_len,
+                char * _src_ip, uint16_t _src_prt,
+                char * _dst_ip, uint16_t _dst_prt)
+{
+    // pointer to the whole packet
+    uint8_t * p_pkt = pkt_buf;
+    // pointer to the eth header.
+    struct ethhdr_ * p_ethhdr = (struct ethhdr_ *) p_pkt;
+    uint16_t ethhdr_len = sizeof(struct ethhdr_);
+    // pointer to the ip header.
+    uint8_t * p_u8_iphdr = p_pkt + ethhdr_len;
+
+    // fill the eth header.
+    for(int i=0; i<6; ++i)
+    {
+        p_ethhdr->h_source[i] = _src_eth[i];
+        p_ethhdr->h_dest[i] = _dst_eth[i];
+    }
+    p_ethhdr->h_proto = htons(0x0800);
+
+    // fill the other fields.
+    uint16_t ip_pkt_len = 0;
+    if(_ip_proto == 6)  // tcp
+    {
+        gen_tcp_packet(p_u8_iphdr, &ip_pkt_len, _pkt_buf_len-ethhdr_len, 
+                    _msg_buf, _msg_len,
+                    _src_ip, _src_prt,
+                    _dst_ip, _dst_prt);
+    }
+    else if(_ip_proto == 17) // udp
+    {
+        gen_udp_packet(p_u8_iphdr, &ip_pkt_len, _pkt_buf_len-ethhdr_len, 
+                    _msg_buf, _msg_len,
+                    _src_ip, _src_prt,
+                    _dst_ip, _dst_prt);
+    }
+    else
+    {
+        printf("Err, the ip-protocol number is not supported. ");
+        printf("Please use 6 for TCP or 17 for UDP.\n");
+        return;
+    }
+
+    *p_pkt_len = ethhdr_len + ip_pkt_len;
+    
 }
 
 
@@ -430,7 +508,7 @@ int send_raw_tcp(int _sock_fd,
             // to show the packet.
             uint8_t *packet_cpy = malloc(BUF_SIZE);
             memset(packet_cpy, 0, BUF_SIZE);
-            int ethhdr_size = sizeof(struct ethhdr);
+            int ethhdr_size = sizeof(struct ethhdr_);
             uint8_t *iphdr_cpy = packet_cpy + ethhdr_size;
             memcpy(iphdr_cpy, pkt_buf, tot_len);
             print_tcp_packet(packet_cpy, ethhdr_size+tot_len);
@@ -442,4 +520,99 @@ int send_raw_tcp(int _sock_fd,
         return 0;
     }
     
+}
+
+
+
+/**
+ * Name : send_raw_eth
+ * Param(s) : 
+ *  # IN :
+ *  _sock_fd,   int,        the socket number.
+ *  _ip_proto,  int,        the ip protocol number. Shall be 6(TCP) or 17(UDP).
+ *  _msg_buf,   uint8_t *,  the buffer to message.
+ *  _msg_len,   uint16_t,   length of msg.
+ *  _src_ip,    char *,     a string of the source ip addr.
+ *  _src_prt,   uint16_t,   the source port num.
+ *  _dst_ip,    char *,     a string of the dest ip addr.
+ *  _dst_prt,   uint16_t,   the dest port num.
+ *  PRINT,      int,        whether print the errs and sucs.
+ * Return :
+ *  result,     int,        0 if success. -1 if not.
+*/
+int send_raw_eth(int _sock_fd, int _ip_proto,
+                uint8_t * _msg_buf, uint16_t _msg_len,
+                uint8_t * _src_eth, uint8_t * _dst_eth,
+                char * _src_ip, uint16_t _src_prt,
+                char * _dst_ip, uint16_t _dst_prt,
+                int PRINT)
+{
+    int sock_fd = _sock_fd;
+
+    // The index of interface.
+    struct ifreq if_idx;
+    memset(&if_idx, 0, sizeof(struct ifreq));
+	strncpy(if_idx.ifr_name, DEFAULT_IF, IFNAMSIZ-1);
+    if(ioctl(sock_fd, SIOCGIFINDEX, &if_idx) < 0)
+    {
+        if(PRINT)
+            perror("Err getting the interface.\n");
+    }
+    // The destination
+    struct sockaddr_ll dest;
+    dest.sll_ifindex = if_idx.ifr_ifindex;
+    dest.sll_halen = ETH_ALEN;
+    // dest l2 addr.
+    for(int i=0; i<6; ++i)
+        dest.sll_addr[i] = _dst_eth[i];
+
+    // Define the buffer.
+    uint8_t * pkt_buf = malloc(BUF_SIZE);
+    memset(pkt_buf, 0, BUF_SIZE);
+    // The length of packet.
+    uint16_t tot_len = 0;
+
+    // Generate the packet.
+    gen_eth_packet(pkt_buf, &tot_len, BUF_SIZE,
+                _ip_proto,
+                _src_eth, _dst_eth,
+                _msg_buf, _msg_len,
+                _src_ip, _src_prt,
+                _dst_ip, _dst_prt);
+
+    // Send the message.
+    logfile = fopen("log.txt", "a");
+    if(logfile==NULL)
+    {
+        if(PRINT)
+            perror("Unable to open log file.\n");
+    }
+
+    if(sendto(sock_fd, pkt_buf, tot_len, 0,
+                (struct sockaddr *) &dest, sizeof(dest)) < 0)
+    {
+        if(PRINT)
+            perror("Error sending raw socket. \n");
+        //close(sock_fd);
+        return -1;
+    }
+    else
+    {
+        printf("Raw socket sent, total length is %d.\n", tot_len);
+        if(logfile != NULL)
+        {
+            // to show the packet.
+            uint8_t *packet_cpy = malloc(BUF_SIZE);
+            memset(packet_cpy, 0, BUF_SIZE);
+            //int ethhdr_size = sizeof(struct ethhdr);
+            uint8_t *iphdr_cpy = packet_cpy;
+            memcpy(iphdr_cpy, pkt_buf, tot_len);
+            print_tcp_packet(packet_cpy, tot_len);
+
+            free(packet_cpy);
+        }
+
+        //close(sock_fd);
+        return 0;
+    }
 }
