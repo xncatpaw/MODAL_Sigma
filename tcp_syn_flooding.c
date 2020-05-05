@@ -1,6 +1,6 @@
 /**
- * Used to finish the challenge Omega.
- * Operate a l2-flooding attack.
+ * Used to finish the challenge Sigma.
+ * Operate a TCP-SYN-flooding attack.
  * Author Benxin ZHONG, 10 Avr. 2020.
 */
 
@@ -16,9 +16,6 @@
 #include "header.h"
 #include "raw_ip.h"
 
-// Function used to generate an ip addr.
-void gen_ip(char *str_ip);
-int gen_prt();
 
 int main(int argc, char *argv[])
 {
@@ -106,20 +103,3 @@ int main(int argc, char *argv[])
     printf("Finished. %d sent out of %d.\n", num_sent, NUM_REPEAT);
 }
 
-
-void gen_ip(char * str_ip_buf)
-{
-    // Set random seed.
-    int ip_num[4];
-    for(int i=0; i<4; ++i)
-        ip_num[i] = rand()%256;
-
-    sprintf(str_ip_buf, "%d.%d.%d.%d", ip_num[0], ip_num[1], ip_num[2], ip_num[3]);
-    return;
-}
-
-
-int gen_prt()
-{
-    return 8000 + rand()%4000;
-}

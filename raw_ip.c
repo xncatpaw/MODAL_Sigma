@@ -529,6 +529,7 @@ int send_raw_tcp(int _sock_fd,
  * Param(s) : 
  *  # IN :
  *  _sock_fd,   int,        the socket number.
+ *  _if_ind,    int,        the index of interface to be used.
  *  _ip_proto,  int,        the ip protocol number. Shall be 6(TCP) or 17(UDP).
  *  _msg_buf,   uint8_t *,  the buffer to message.
  *  _msg_len,   uint16_t,   length of msg.
@@ -540,7 +541,7 @@ int send_raw_tcp(int _sock_fd,
  * Return :
  *  result,     int,        0 if success. -1 if not.
 */
-int send_raw_eth(int _sock_fd, int _ip_proto,
+int send_raw_eth(int _sock_fd, int _if_ind, int _ip_proto,
                 uint8_t * _msg_buf, uint16_t _msg_len,
                 uint8_t * _src_eth, uint8_t * _dst_eth,
                 char * _src_ip, uint16_t _src_prt,
@@ -549,6 +550,7 @@ int send_raw_eth(int _sock_fd, int _ip_proto,
 {
     int sock_fd = _sock_fd;
 
+    /*
     // The index of interface.
     struct ifreq if_idx;
     memset(&if_idx, 0, sizeof(struct ifreq));
@@ -558,9 +560,12 @@ int send_raw_eth(int _sock_fd, int _ip_proto,
         if(PRINT)
             perror("Err getting the interface.\n");
     }
+    */
+
     // The destination
     struct sockaddr_ll dest;
-    dest.sll_ifindex = if_idx.ifr_ifindex;
+    //dest.sll_ifindex = if_idx.ifr_ifindex;
+    dest.sll_ifindex = _if_ind;
     dest.sll_halen = ETH_ALEN;
     // dest l2 addr.
     for(int i=0; i<6; ++i)
@@ -592,13 +597,14 @@ int send_raw_eth(int _sock_fd, int _ip_proto,
                 (struct sockaddr *) &dest, sizeof(dest)) < 0)
     {
         if(PRINT)
-            perror("Error sending raw socket. \n");
+            perror("Error sending raw ETH packet. \n");
         //close(sock_fd);
         return -1;
     }
     else
     {
-        printf("Raw socket sent, total length is %d.\n", tot_len);
+        if(PRINT)
+            printf("\nRaw ETH packet sent, total length is %d.\n", tot_len);
         if(logfile != NULL)
         {
             // to show the packet.
@@ -615,4 +621,38 @@ int send_raw_eth(int _sock_fd, int _ip_proto,
         //close(sock_fd);
         return 0;
     }
+}
+
+
+void gen_ip(char * str_ip_buf)
+{
+    // Set random seed.
+    int ip_num[4];
+    for(int i=0; i<4; ++i)
+        ip_num[i] = rand()%256;
+
+    sprintf(str_ip_buf, "%d.%d.%d.%d", ip_num[0], ip_num[1], ip_num[2], ip_num[3]);
+    return;
+}
+
+
+int gen_prt()
+{
+    return 8000 + rand()%4000;
+}
+
+
+/**
+* Function: gen_l2_addr
+* -Param(s):
+*   # OUT:
+*   l2_addr,    type uint8 *,   the buffer in which the l2 addr will be generated.
+*                               It shall have size at least 6.
+* -Return(s):
+*   void.
+*/
+void gen_l2_addr(uint8_t *l2_addr)
+{
+    for(int i=0; i<6; ++i)
+        l2_addr[i] = rand()%256;
 }

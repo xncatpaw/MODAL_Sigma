@@ -8,19 +8,22 @@
 
 # Here is a simple Make Macro.
 
-LINK_TARGET = tcp_syn_flooding
+LINK_TARGET = tcp_syn_flooding l2_flooding
 
 # Here is a Make Macro that uses the backslash to extend to multiple lines.
 # This allows quick modification of more object files.
 
 OBJS = \
-	header.o raw_ip.o tcp_syn_flooding.o
+	header.o raw_ip.o #tcp_syn_flooding.o
+
+TCP_OBJ = tcp_syn_flooding.o
+L2_OBJ = l2_flooding.o
 	
 # Here is a Make Macro defined by two Macro Expansions.
 # A Macro Expansion may be treated as a textual replacement of the Make Macro.
 # Macro Expansions are introduced with $ and enclosed in (parentheses).
 
-REBUILDABLES = $(OBJS) $(LINK_TARGET)
+REBUILDABLES = $(OBJS) $(LINK_TARGET) $(TCP_OBJ) $(L2_OBJ)
 
 # There are two standard Targets your Makefile should probably have:
 # "all" and "clean", because they are often command-line Goals.
@@ -31,6 +34,10 @@ REBUILDABLES = $(OBJS) $(LINK_TARGET)
 # It does this by expressing a dependency on the results of that system,
 # which in turn have their own rules and dependencies.
 all : $(LINK_TARGET)
+
+
+tcp_syn_flooding : $(OBJS) $(TCP_OBJ)
+l2_flooding : $(OBJS) $(L2_OBJ)
 
 # Make Macros do not need to be defined before their Macro Expansions,
 # but they normally should be defined before they appear in any Rules.
@@ -53,7 +60,7 @@ clean:
 # Here is a Rule that uses some built-in Make Macros in its command:
 # $@ expands to the rule's target
 # $^ expands to the rule's dependencies
-$(LINK_TARGET) : $(OBJS)
+#$(LINK_TARGET) : $(OBJS)
 
 
 # Here is a Pattern Rule, often used for compile-line.
