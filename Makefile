@@ -6,24 +6,39 @@
 
 # Comments start with a # and go to the end of the line.
 
+SRC_DIR = src
+INC_DIR = include
+OBJ_DIR = obj
+
+CC = gcc
+CPPFLAGS = -Iinclude
+CFLAGS = -Wall
+
 # Here is a simple Make Macro.
 
 LINK_TARGET = tcp_syn_flooding l2_flooding
 
+
 # Here is a Make Macro that uses the backslash to extend to multiple lines.
 # This allows quick modification of more object files.
 
-OBJS = \
-	header.o raw_ip.o #tcp_syn_flooding.o
+SRC = $(wildcard $(SRC_DIR)/*.c)
+#OBJS = \
+#	header.o raw_ip.o #tcp_syn_flooding.o
+#OBJ = $(patsubst %.c,%.o,$(SRC))
+OBJ_ALL = $(patsubst %.c, %.o, $(addprefix $(OBJ_DIR)/, $(notdir $(SRC))))
+OBJ_TAR = $(addprefix $(OBJ_DIR)/, $(addsuffix .o, $(LINK_TARGET)))
+OBJ = $(filter-out $(OBJ_TAR), $(OBJ_ALL))
+#OBJ = $(patsubst %.c,%.o,$(OBJ))
 
-TCP_OBJ = tcp_syn_flooding.o
-L2_OBJ = l2_flooding.o
+TCP_OBJ = $(OBJ_DIR)/tcp_syn_flooding.o
+L2_OBJ = $(OBJ_DIR)/l2_flooding.o
 	
 # Here is a Make Macro defined by two Macro Expansions.
 # A Macro Expansion may be treated as a textual replacement of the Make Macro.
 # Macro Expansions are introduced with $ and enclosed in (parentheses).
 
-REBUILDABLES = $(OBJS) $(LINK_TARGET) $(TCP_OBJ) $(L2_OBJ)
+REBUILDABLES = $(OBJ) $(LINK_TARGET) $(TCP_OBJ) $(L2_OBJ)
 
 # There are two standard Targets your Makefile should probably have:
 # "all" and "clean", because they are often command-line Goals.
@@ -36,8 +51,10 @@ REBUILDABLES = $(OBJS) $(LINK_TARGET) $(TCP_OBJ) $(L2_OBJ)
 all : $(LINK_TARGET)
 
 
-tcp_syn_flooding : $(OBJS) $(TCP_OBJ)
-l2_flooding : $(OBJS) $(L2_OBJ)
+tcp_syn_flooding : $(OBJ) $(TCP_OBJ)
+	$(CC) $^ -o $@
+l2_flooding : $(OBJ) $(L2_OBJ)
+	$(CC) $^ -o $@
 
 # Make Macros do not need to be defined before their Macro Expansions,
 # but they normally should be defined before they appear in any Rules.
@@ -52,6 +69,10 @@ l2_flooding : $(OBJS) $(L2_OBJ)
 clean: 
 	rm -f $(REBUILDABLES)
 	rm -f log.txt
+
+test:
+	@echo $(SRC)
+	@echo $(OBJ)
 
 # There is no required order to the list of rules as they appear in the Makefile.
 # Make will build its own dependency tree and only execute each rule only once
@@ -69,8 +90,8 @@ clean:
 # $@ for the pattern-matched target
 # $lt; for the pattern-matched dependency
 
-%.o : %.c
-	gcc -g   -Wall -o $@ -c $< 
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
+	$(CC) -g  $(CPPFLAGS) $(CFLAGS) -o $@ -c $< 
   
 # These are Dependency Rules, which are rules without any command.
 # Dependency Rules indicate that if any file to the right of the colon changes,
