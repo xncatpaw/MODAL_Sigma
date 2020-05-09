@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     int NUM_REPEAT = 5000;
     if(argc < 3)
     {
-        printf("Usage : %s dst_ip dst_port [num_repeat] [PRINT]", argv[0]);
+        printf("Usage : %s dst_ip dst_port [[num_repeat] PRINT]", argv[0]);
         exit(1);
     }
 
