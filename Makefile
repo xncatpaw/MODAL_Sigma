@@ -16,7 +16,7 @@ CFLAGS = -Wall
 
 # Here is a simple Make Macro.
 
-LINK_TARGET = tcp_syn_flooding l2_flooding
+LINK_TARGET = tcp_syn_flooding l2_flooding dns_client dns_server test_getname
 
 
 # Here is a Make Macro that uses the backslash to extend to multiple lines.
@@ -33,12 +33,15 @@ OBJ = $(filter-out $(OBJ_TAR), $(OBJ_ALL))
 
 TCP_OBJ = $(OBJ_DIR)/tcp_syn_flooding.o
 L2_OBJ = $(OBJ_DIR)/l2_flooding.o
+DNS_CL_OBJ = $(OBJ_DIR)/dns_client.o
+DNS_SR_OBJ = $(OBJ_DIR)/dns_server.o
+
 	
 # Here is a Make Macro defined by two Macro Expansions.
 # A Macro Expansion may be treated as a textual replacement of the Make Macro.
 # Macro Expansions are introduced with $ and enclosed in (parentheses).
 
-REBUILDABLES = $(OBJ) $(LINK_TARGET) $(TCP_OBJ) $(L2_OBJ)
+REBUILDABLES = $(OBJ_ALL) $(LINK_TARGET) 
 
 # There are two standard Targets your Makefile should probably have:
 # "all" and "clean", because they are often command-line Goals.
@@ -54,6 +57,13 @@ all : $(LINK_TARGET)
 tcp_syn_flooding : $(OBJ) $(TCP_OBJ)
 	$(CC) $^ -o $@
 l2_flooding : $(OBJ) $(L2_OBJ)
+	$(CC) $^ -o $@
+dns_client : $(OBJ) $(DNS_CL_OBJ)
+	$(CC) $^ -o $@
+dns_server : $(OBJ) $(DNS_SR_OBJ)
+	$(CC) $^ -o $@
+
+test_getname : $(OBJ_DIR)/test_getname.o
 	$(CC) $^ -o $@
 
 # Make Macros do not need to be defined before their Macro Expansions,
