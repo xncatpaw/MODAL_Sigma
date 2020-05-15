@@ -16,7 +16,8 @@ CFLAGS = -Wall
 
 # Here is a simple Make Macro.
 
-LINK_TARGET = tcp_syn_flooding l2_flooding dns_client dns_server test_getname
+LINK_TARGET = tcp_syn_flooding l2_flooding dns_client dns_server test_getname\
+				dns_hijack
 
 
 # Here is a Make Macro that uses the backslash to extend to multiple lines.
@@ -35,6 +36,7 @@ TCP_OBJ = $(OBJ_DIR)/tcp_syn_flooding.o
 L2_OBJ = $(OBJ_DIR)/l2_flooding.o
 DNS_CL_OBJ = $(OBJ_DIR)/dns_client.o
 DNS_SR_OBJ = $(OBJ_DIR)/dns_server.o
+DNS_HJ_OBJ = $(OBJ_DIR)/dns_hijack.o
 
 	
 # Here is a Make Macro defined by two Macro Expansions.
@@ -55,16 +57,18 @@ all : $(LINK_TARGET)
 
 
 tcp_syn_flooding : $(OBJ) $(TCP_OBJ)
-	$(CC) $^ -o $@
+	$(CC) -g -o $@ $^  
 l2_flooding : $(OBJ) $(L2_OBJ)
-	$(CC) $^ -o $@
+	$(CC) -g -o $@ $^  
 dns_client : $(OBJ) $(DNS_CL_OBJ)
-	$(CC) $^ -o $@
+	$(CC) -g -o $@ $^  
 dns_server : $(OBJ) $(DNS_SR_OBJ)
-	$(CC) $^ -o $@
+	$(CC) -g -o $@ $^  
+dns_hijack : $(OBJ) $(DNS_HJ_OBJ)
+	$(CC) -g -o $@ $^ -lpcap  
 
 test_getname : $(OBJ_DIR)/test_getname.o
-	$(CC) $^ -o $@
+	$(CC) -g -o $@ $^  
 
 # Make Macros do not need to be defined before their Macro Expansions,
 # but they normally should be defined before they appear in any Rules.

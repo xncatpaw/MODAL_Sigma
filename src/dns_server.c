@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
 	char *dns_server = "8.8.8.8";
 	int port = 53; //the default port of DNS service
-	FILE * parttern_file = NULL;
+	FILE * pattern_file = NULL;
 
 	//to keep the information received.
 	res_record answers[ANS_SIZE], auth[ANS_SIZE], addit[ANS_SIZE];
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 	if(argc >= 3)
 	{
 		parttern_file = fopen(argv[2], "r");
-		if(!parttern_file)
+		if(!pattern_file)
 		{
 			char str_err[100];
 			fprintf(str_err, "Err openning file %s : ", argv[2]);
@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 		}
 
 		// Process the request.
-		int size = process_query(buf, send_buf, parttern_file);
+		int size = process_query(buf, send_buf, pattern_file);
 		// Send back the answer.
 		if(sendto(sockfd, (char *)send_buf, size, 0, &remote, addr_len) < 0)
 		{

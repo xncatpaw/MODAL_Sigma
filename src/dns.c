@@ -367,7 +367,7 @@ int process_query(uint8_t *buf, uint8_t *send_buf, FILE *pattern_file)
 			rewind(pattern_file);
 			char * line_buf = NULL;
 			size_t line_buf_size = 0;
-			size_t line_size = 0;
+			int line_size = 0;
 			// Traverse all lines.
 			do
 			{
