@@ -298,21 +298,5 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
 	{
 		printf("Answer sent.\n");
 	}
-	
-
-	/****************UDP header********************/
-	//struct udphdr *out_udphdr = (struct udphdr*)(send_buf + sizeof(struct iphdr));
-    
-    //TODO
-
-	/*****************IP header************************/
-	//struct iphdr *out_iphdr = (struct iphdr*)send_buf;
-
-    //TODO
-
-	/************** send out using raw IP socket************/
-
-    //TODO
-
 }
 
